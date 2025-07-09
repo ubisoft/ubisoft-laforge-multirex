@@ -35,7 +35,7 @@ The benchmark is built on the [Multiface](https://github.com/facebookresearch/mu
 1. Please start by cloning this repository and install dependencies. 
 
 ```bash
-cd MULTIREX
+cd ubisoft-laforge-multirex
 sh multirex_conda.sh
 ```
 
