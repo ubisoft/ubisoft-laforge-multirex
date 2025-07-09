@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multirex"
+dynamic = [
+    "version"
+]
+authors = [
+    { name = "Arthur Josi", email = "arthur.josi@ubisoft.com" },
+    { name = "Luiz Gustavo Hafemann", email = "luiz.gustavo-hafemann@ubisoft.com" },
+]
+description = "MultiREX Benchmark: Video-based face expression capture benchmark"
+readme = "README.md"
+requires-python = ">=3"
+classifiers = ["Programming Language :: Python :: 3"]
+dependencies = [
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+
+[tool.setuptools_scm]
+write_to = "src/multirex/_version.py"
+
+[tool.black]
+line-length = 160
+extend-exclude = '''
+/(
+  \.env
+  | pyenv
+)/
+'''

@@ -1,0 +1,31 @@
+@@ -137,8 +137,8 @@
+     return landmarks
+ 
+ 
+-def lbs(betas, pose, v_template, shapedirs, posedirs, J_regressor, parents,
+-        lbs_weights, pose2rot=True, dtype=torch.float32):
++def lbs(expression_params, pose, v_template, shapedirs, posedirs, J_regressor, parents,
++        lbs_weights, pose2rot=True, dtype=torch.float32, shape_params=None, neutral_meshes=None):
+     ''' Performs Linear Blend Skinning with the given shape and pose parameters
+ 
+         Parameters
+@@ -177,11 +177,15 @@
+             The joints of the model
+     '''
+ 
+-    batch_size = max(betas.shape[0], pose.shape[0])
+-    device = betas.device
++    batch_size = pose.shape[0]
++    device = pose.device
+ 
+-    # Add shape contribution
+-    v_shaped = v_template + blend_shapes(betas, shapedirs)
++    if shape_params is not None:
++        betas = torch.cat([shape_params, expression_params], dim=1)
++        v_shaped = v_template + blend_shapes(betas, shapedirs)
++    else:
++        n_expressions = expression_params.shape[1]
++        v_shaped = neutral_meshes + blend_shapes(expression_params, shapedirs[..., -n_expressions:])
+ 
+     # Get the joints
+     # NxJx3 array

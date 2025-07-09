@@ -1,0 +1,13 @@
+{
+    "entity": ["002645310", "002643814", "7889059","5372021", "8870559", "002914589", "6795937", "002421669"],
+    "image": true,
+    "mesh": true,
+    "texture": false,
+    "metadata": true,
+    "audio": false,
+    "expression":
+    [
+        "EXP_ROM07_Facial_Expressions",
+        "EXP_free_face"
+    ]
+}

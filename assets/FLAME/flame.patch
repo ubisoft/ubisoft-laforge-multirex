@@ -1,0 +1,102 @@
+@@ -48,7 +48,7 @@
+     which outputs the a mesh and 2D/3D facial landmarks
+     """
+     def __init__(self, flame_model_path='assets/FLAME2020/generic_model.pkl',
+-                 flame_lmk_embedding_path='assets/landmark_embedding.npy', n_shape=300, n_exp=50):
++                 flame_lmk_embedding_path='assets/landmark_embedding.npy', n_shape=300, n_exp=50, assets_path="./"):
+         super(FLAME, self).__init__()
+
+         with open(flame_model_path, 'rb') as f:
+@@ -78,8 +78,8 @@
+         self.register_buffer('lbs_weights', to_tensor(to_np(flame_model.weights), dtype=self.dtype))
+ 
+ 
+-        self.register_buffer('l_eyelid', torch.from_numpy(np.load(f'assets/l_eyelid.npy')).to(self.dtype)[None])
+-        self.register_buffer('r_eyelid', torch.from_numpy(np.load(f'assets/r_eyelid.npy')).to(self.dtype)[None])
++        self.register_buffer('l_eyelid', torch.from_numpy(np.load(assets_path / f'FLAME/l_eyelid.npy')).to(self.dtype)[None])
++        self.register_buffer('r_eyelid', torch.from_numpy(np.load(assets_path / f'FLAME/r_eyelid.npy')).to(self.dtype)[None])
+ 
+ 
+         # Fixing Eyeball and neck rotation
+@@ -108,7 +108,7 @@
+         self.register_buffer('neck_kin_chain', torch.stack(neck_kin_chain))
+ 
+ 
+-        lmk_embeddings_mp = np.load("assets/mediapipe_landmark_embedding/mediapipe_landmark_embedding.npz")
++        lmk_embeddings_mp = np.load(assets_path / "FLAME/mediapipe_landmark_embedding.npz")
+         self.register_buffer('mp_lmk_faces_idx', torch.from_numpy(lmk_embeddings_mp['lmk_face_idx'].astype('int32')).long())
+         self.register_buffer('mp_lmk_bary_coords', torch.from_numpy(lmk_embeddings_mp['lmk_b_coords']).to(self.dtype))
+ 
+@@ -229,35 +229,41 @@
+         return vertices, landmarks2d, landmarks3d
+ 
+ 
+-    def forward(self, param_dictionary, zero_expression=False, zero_shape=False, zero_pose=False):
+-        shape_params = param_dictionary['shape_params']
++    def forward(self, param_dictionary, zero_expression=False, zero_shape=False, zero_pose=False, neutral_meshes=None):
++        shape_params = param_dictionary.get('shape_params', None)
+         expression_params = param_dictionary['expression_params']
+         pose_params = param_dictionary.get('pose_params', None)
+         jaw_params = param_dictionary.get('jaw_params', None)
+         eye_pose_params = param_dictionary.get('eye_pose_params', None)
+         neck_pose_params = param_dictionary.get('neck_pose_params', None)
+         eyelid_params = param_dictionary.get('eyelid_params', None)
+-        
+-        batch_size = shape_params.shape[0]
++
++        if shape_params is None and neutral_meshes is None:
++            raise ValueError('Either shape_params or neutral_meshes should be provided')
++        if shape_params is not None and neutral_meshes is not None:
++            raise ValueError('Only one of shape_params or neutral_meshes should be provided')
+ 
++        batch_size = shape_params.shape[0] if shape_params is not None else neutral_meshes.shape[0]
++        device = shape_params.device if shape_params is not None else neutral_meshes.device
++
+         # Adjust expression params size if needed
+         if expression_params.shape[1] < self.n_exp:
+-            expression_params = torch.cat([expression_params, torch.zeros(expression_params.shape[0], self.n_exp - expression_params.shape[1]).to(shape_params.device)], dim=1)
++            expression_params = torch.cat([expression_params, torch.zeros(expression_params.shape[0], self.n_exp - expression_params.shape[1]).to(device)], dim=1)
+ 
+-        if shape_params.shape[1] < self.n_shape:
+-            shape_params = torch.cat([shape_params, torch.zeros(shape_params.shape[0], self.n_shape - shape_params.shape[1]).to(shape_params.device)], dim=1)
+-        
++        if shape_params is not None and shape_params.shape[1] < self.n_shape:
++            shape_params = torch.cat([shape_params, torch.zeros(shape_params.shape[0], self.n_shape - shape_params.shape[1]).to(device)], dim=1)
++
+         # Zero out the expression and pose parameters if needed
+         if zero_expression:
+-            expression_params = torch.zeros_like(expression_params).to(shape_params.device)
+-            jaw_params = torch.zeros_like(jaw_params).to(shape_params.device)
++            expression_params = torch.zeros_like(expression_params).to(device)
++            jaw_params = torch.zeros_like(jaw_params).to(device)
+ 
+-        if zero_shape:
+-            shape_params = torch.zeros_like(shape_params).to(shape_params.device)
++        if shape_params is not None and zero_shape:
++            shape_params = torch.zeros_like(shape_params).to(device)
+ 
+ 
+         if zero_pose:
+-            pose_params = torch.zeros_like(pose_params).to(shape_params.device)
++            pose_params = torch.zeros_like(pose_params).to(device)
+             pose_params[...,0] = 0.2
+             pose_params[...,1] = -0.7
+ 
+@@ -271,15 +277,14 @@
+             neck_pose_params = self.neck_pose.expand(batch_size, -1)
+             
+ 
+-        betas = torch.cat([shape_params, expression_params], dim=1)
+         full_pose = torch.cat([pose_params, neck_pose_params, jaw_params, eye_pose_params], dim=1)
+ 
+         template_vertices = self.v_template.unsqueeze(0).expand(batch_size, -1, -1)
+ 
+-        vertices, _ = lbs(betas, full_pose, template_vertices,
++        vertices, _ = lbs(expression_params, full_pose, template_vertices,
+                           self.shapedirs, self.posedirs,
+                           self.J_regressor, self.parents,
+-                          self.lbs_weights, dtype=self.dtype)
++                          self.lbs_weights, dtype=self.dtype, neutral_meshes=neutral_meshes)
+ 
+         if eyelid_params is not None:
+             vertices = vertices + self.r_eyelid.expand(batch_size, -1, -1) * eyelid_params[:, 1:2, None]
