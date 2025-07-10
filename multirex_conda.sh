@@ -3,7 +3,7 @@
 export CONDA_ENV_NAME=multirex
 echo $CONDA_ENV_NAME
 
-conda create -n $CONDA_ENV_NAME python=3.8.19
+conda create -y -n $CONDA_ENV_NAME python=3.8.19
 
 eval "$(conda shell.bash hook)"
 conda activate $CONDA_ENV_NAME
