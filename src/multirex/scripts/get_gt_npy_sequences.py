@@ -24,6 +24,9 @@ def main(args):
     for bin_path in bin_paths:
         bin_base_path = base_installation_folder / bin_path
         bin_files = sorted(list(bin_base_path.glob("*.bin")))
+        if len(bin_files) == 0:
+            print(f"No .bin files found in {bin_base_path}. Skipping...")
+            continue
         bin_data = []
         for bin_file in bin_files:
             data = np.fromfile(bin_file, dtype=np.float32)
@@ -32,6 +35,7 @@ def main(args):
         gt_sequence = np.array(bin_data).reshape(-1, 7306, 3)
         save_name = '#'.join(bin_path.split('/')).replace("tracked_mesh", "images")
         np.save(output_multiface_gt_path / f"{save_name}.npy", gt_sequence)
+        print(f"gt sequence {save_name}.npy saved to to {output_multiface_gt_path}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process multiface bin files.")
