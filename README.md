@@ -100,7 +100,7 @@ Please ensure you have the **39 benchmark videos** (by default in `./videos_gamm
 Once the 39 videos have been processed with your face expression capture approach, launch the benchmark evaluation using the following command:
 
 ```bash
-python -m multirex.multirex_evaluation.py --input_folder "/path/to/flame/components/capture" --output_folder "/path/to/results" --n_exp_components 100 --gt_path "./assets/multiface_gt"
+python -m multirex.multirex_evaluation --input_folder "/path/to/flame/components/capture" --output_folder "/path/to/results" --n_exp_components 100 --gt_path "./assets/multiface_gt"
 ```
 with:
 - `--input_folder`: Path to the folder containing the FLAME parameter `.pkl` or `.npz` files for each video.
