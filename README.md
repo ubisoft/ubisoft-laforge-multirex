@@ -30,9 +30,11 @@ The regions we evaluate are the forehead, cheek, mouth, and nose. For each regio
 
 # Installation
 
+The current version only supports Linux, including Windows Subsystem for Linux (WSL).
+
 The benchmark is built on the [Multiface](https://github.com/facebookresearch/multiface) dataset and requires ~15 GB of storage.  
 
-1. Please start by cloning this repository and install dependencies. 
+1. Please start by cloning this repository and install dependencies. You need conda (e.g. from [here](https://github.com/conda-forge/miniforge)).
 
 ```bash
 cd ubisoft-laforge-multirex
