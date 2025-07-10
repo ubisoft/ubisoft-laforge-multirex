@@ -1,11 +1,11 @@
 @@ -48,7 +48,7 @@
      which outputs the a mesh and 2D/3D facial landmarks
      """
-     def __init__(self, flame_model_path='assets/FLAME2020/generic_model.pkl',
+     def __init__(self, flame_model_path='assets/FLAME2020/generic_model.pkl', 
 -                 flame_lmk_embedding_path='assets/landmark_embedding.npy', n_shape=300, n_exp=50):
 +                 flame_lmk_embedding_path='assets/landmark_embedding.npy', n_shape=300, n_exp=50, assets_path="./"):
          super(FLAME, self).__init__()
-
+ 
          with open(flame_model_path, 'rb') as f:
 @@ -78,8 +78,8 @@
          self.register_buffer('lbs_weights', to_tensor(to_np(flame_model.weights), dtype=self.dtype))
